@@ -1,6 +1,10 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:reminder_app/assets/constants.dart';
+import 'package:reminder_app/models/reminder.dart';
+import 'package:reminder_app/providers/boxes.dart';
+import 'package:reminder_app/providers/reminder_provider.dart';
 
 class AddDateColumn extends StatefulWidget {
   final String dateText;
@@ -60,8 +64,29 @@ class CreateTextField extends StatefulWidget {
   _CreateTextFieldState createState() => _CreateTextFieldState();
 }
 class _CreateTextFieldState extends State<CreateTextField> {
+  final reminderTextController = TextEditingController();
+  FocusNode _focusNode = new FocusNode();
+
+  @override
+  void initState() {
+    super.initState();
+    _focusNode.addListener(_onFocusChange);
+  }
+
+  @override
+  void dispose() {
+    reminderTextController.dispose();
+    super.dispose();
+    _focusNode.removeListener(_onFocusChange);
+  }
+
+  void _onFocusChange(){
+    debugPrint("Focus:" +_focusNode.hasFocus.toString());
+  }
+
   @override
   Widget build(BuildContext context) {
+    var reminderProvider = Provider.of<ReminderProvider>(context);
     return Padding(
       padding: EdgeInsets.only(left: 20.0, right: 20.0),
       child: Container(
@@ -69,6 +94,12 @@ class _CreateTextFieldState extends State<CreateTextField> {
         padding: EdgeInsets.all(10.0),
         decoration: buttonStyle,
         child: TextField(
+          onChanged: (text){
+            reminderProvider.setReminderMessage(text);
+          },
+          focusNode: _focusNode,
+          controller: reminderTextController,
+          textInputAction: TextInputAction.done,
           cursorColor: kNeonRed,
           style: TextStyle(
             fontSize: 25.0,
@@ -77,10 +108,11 @@ class _CreateTextFieldState extends State<CreateTextField> {
               hintText: 'Enter your reminder',
           ),
           maxLines: 20,
-          maxLength: 140,
+          maxLength: 70,
         ),
       ),
     );
+
   }
 }
 
@@ -115,3 +147,135 @@ Decoration buttonStyle = BoxDecoration(
   ],
 );
 
+class TimePicker extends StatefulWidget {
+  final String dateText;
+  final String timeInfo;
+  const TimePicker({Key? key, required this.dateText, required this.timeInfo}) : super(key: key);
+
+  @override
+  _TimePickerState createState() => _TimePickerState();
+}
+class _TimePickerState extends State<TimePicker> {
+
+  late TimeOfDay time;
+  late TimeOfDay picked;
+  late String formattedTime = "";
+
+  @override
+  void initState() {
+    super.initState();
+    time = TimeOfDay.now();
+  }
+
+  Future<void> selectTime (BuildContext context) async {
+    var reminderProvider = Provider.of<ReminderProvider>(context, listen: false);
+    picked = (await showTimePicker(
+        context: context,
+        initialTime: time,
+    ))!;
+    if(picked != null){
+      setState(() {
+        time = picked;
+      });
+      formattedTime = time.format(context);
+      if(widget.timeInfo == 'startingTime'){
+        reminderProvider.setStartingTime(formattedTime);
+      }
+      else{
+        reminderProvider.setFinishingTime(formattedTime);
+      }
+    }
+
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.start,
+      children: [
+        Container(
+          decoration: buttonStyle,
+          child: Padding(
+            padding: const EdgeInsets.all(1.0),
+            child: Row(
+              children: [
+                IconButton(
+                  onPressed: () {
+                    setState(() {
+                      selectTime(context);
+                    });
+                  },
+                  icon: const Icon(Icons.date_range),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(10.0),
+                  child: Text(
+                    widget.dateText,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16.0,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.only(top: 20.0),
+          child: Text(
+            formattedTime,
+            style: TextStyle(
+              fontSize: 18.0,
+              color: kNeonRed,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class SaveButton extends StatefulWidget {
+  const SaveButton({Key? key}) : super(key: key);
+
+  @override
+  _SaveButtonState createState() => _SaveButtonState();
+}
+class _SaveButtonState extends State<SaveButton> {
+
+  Future addReminder(String reminderText, String startingTime, String finishingTime) async {
+    final reminder = Reminder()
+      ..reminderText = reminderText
+      ..startingTime = startingTime
+      ..finishingTime = finishingTime;
+
+    final box = Boxes.getReminders();
+    box.add(reminder);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    var reminderProvider = Provider.of<ReminderProvider>(context);
+    return Container(
+      decoration: buttonStyle,
+      child: TextButton(
+        onPressed: () {
+          addReminder(
+              reminderProvider.reminderMessage,
+              reminderProvider.startTime,
+              reminderProvider.finishingTime);
+        },
+        child: const Text(
+          'Save',
+          style: TextStyle(
+            fontSize: 16.0,
+            color: Colors.black,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
+    );
+  }
+}

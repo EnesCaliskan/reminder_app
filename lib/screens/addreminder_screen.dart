@@ -11,7 +11,6 @@ class AddReminder extends StatefulWidget {
 }
 
 class _AddReminderState extends State<AddReminder> {
-
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -24,18 +23,12 @@ class _AddReminderState extends State<AddReminder> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              AddDateColumn(dateText: 'Starts from', date: 'placeholder'),
-              AddDateColumn(dateText: 'Until', date: 'placeholder'),
+              TimePicker(dateText: 'Start from', timeInfo: 'startingTime',),
+              TimePicker(dateText: 'Until', timeInfo: 'finishingTime',),
             ],
           ),
         ),
-        Container(
-          decoration: buttonStyle,
-          child: TextButton(
-            onPressed: (){},
-            child: Text('Save', style: TextStyle(fontSize: 16.0,color: Colors.black),),
-          ),
-        ),
+        SaveButton(),
       ],
     );
   }
