@@ -6,6 +6,7 @@ import 'package:reminder_app/assets/constants.dart';
 import 'package:reminder_app/models/reminder.dart';
 import 'package:reminder_app/providers/boxes.dart';
 import 'package:reminder_app/widgets/addreminder_widgets.dart';
+import 'package:reminder_app/controllers/notification_controller.dart';
 
 class ReminderPage extends StatefulWidget {
   const ReminderPage({Key? key}) : super(key: key);
@@ -24,9 +25,10 @@ class _ReminderPageState extends State<ReminderPage> {
   @override
   Widget build(BuildContext context) {
 
-    Future clearCart() async {
+    Future clearReminders() async {
       final box = Boxes.getReminders();
       box.deleteAll(box.keys);
+      NotificationApi.turnOffNotification();
     }
 
     Future clearSelected(Reminder reminder) async {
@@ -122,7 +124,7 @@ class _ReminderPageState extends State<ReminderPage> {
                 decoration: buttonStyle,
                 child: TextButton(
                   onPressed: () {
-                    clearCart();
+                    clearReminders();
                   },
                   child: const Text(
                     'Clear Reminders',

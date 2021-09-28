@@ -1,4 +1,3 @@
-// ignore_for_file: prefer_const_constructors
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:reminder_app/widgets/addreminder_widgets.dart';
@@ -11,6 +10,7 @@ class AddReminder extends StatefulWidget {
 }
 
 class _AddReminderState extends State<AddReminder> {
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -19,10 +19,10 @@ class _AddReminderState extends State<AddReminder> {
         ReminderTitle(),
         CreateTextField(),
         Padding(
-          padding: EdgeInsets.all(40.0),
+          padding: EdgeInsets.only(top: 40.0, left: 35.0, right: 35.0),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
+            children: const [
               TimePicker(dateText: 'Start from', timeInfo: 'startingTime',),
               TimePicker(dateText: 'Until', timeInfo: 'finishingTime',),
             ],

@@ -2,9 +2,11 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:reminder_app/assets/constants.dart';
+import 'package:reminder_app/controllers/notification_controller.dart';
 import 'package:reminder_app/models/reminder.dart';
 import 'package:reminder_app/providers/boxes.dart';
 import 'package:reminder_app/providers/reminder_provider.dart';
+import 'package:intl/intl.dart';
 
 class AddDateColumn extends StatefulWidget {
   final String dateText;
@@ -244,13 +246,13 @@ class SaveButton extends StatefulWidget {
   _SaveButtonState createState() => _SaveButtonState();
 }
 class _SaveButtonState extends State<SaveButton> {
+  DateTime now = DateTime.now();
 
   Future addReminder(String reminderText, String startingTime, String finishingTime) async {
     final reminder = Reminder()
       ..reminderText = reminderText
       ..startingTime = startingTime
       ..finishingTime = finishingTime;
-
     final box = Boxes.getReminders();
     box.add(reminder);
   }
@@ -258,14 +260,57 @@ class _SaveButtonState extends State<SaveButton> {
   @override
   Widget build(BuildContext context) {
     var reminderProvider = Provider.of<ReminderProvider>(context);
+    List list = List.generate(100, (i) => i);
+    list.shuffle();
+    int firstRandomNum = list[0];
+    int secondRandomNum = list[1];
     return Container(
       decoration: buttonStyle,
       child: TextButton(
         onPressed: () {
+          list.shuffle();
           addReminder(
               reminderProvider.reminderMessage,
               reminderProvider.startTime,
               reminderProvider.finishingTime);
+
+          DateTime scheduledStartingDate = DateFormat(
+            "yyyy-MM-dd hh:mm:ss"
+          ).parse(
+              "${now.year}-${now.month}-${now.day} ${reminderProvider.startTime}:00");
+
+          DateTime scheduledFinishingDate = DateFormat(
+              "yyyy-MM-dd hh:mm:ss"
+          ).parse(
+              "${now.year}-${now.month}-${now.day} ${reminderProvider.finishingTime}:00");
+
+
+          NotificationApi.showScheduledNotification(
+              id: firstRandomNum,
+              title: 'Reminder!',
+              body: reminderProvider.reminderMessage,
+              payload: reminderProvider.reminderMessage,
+              scheduledDate: scheduledStartingDate,
+          );
+
+          NotificationApi.showScheduledNotification(
+            id: secondRandomNum,
+            title: 'Time is up!',
+            body: reminderProvider.reminderMessage,
+            payload: reminderProvider.reminderMessage,
+            scheduledDate: scheduledFinishingDate,
+          );
+
+          final snackBar = SnackBar(
+            content: Text(
+              'Reminder set up for ' + reminderProvider.startTime,
+               style: TextStyle(fontSize: 20.0, color: Colors.white),
+            ),
+            backgroundColor: Colors.black,
+          );
+          ScaffoldMessenger.of(context)
+          ..removeCurrentSnackBar()
+          ..showSnackBar(snackBar);
         },
         child: const Text(
           'Save',

@@ -9,12 +9,16 @@ import 'assets/constants.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hive/hive.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:reminder_app/controllers/notification_controller.dart';
+import 'package:timezone/data/latest.dart' as tz;
+import 'package:timezone/timezone.dart' as tz;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Hive.initFlutter();
   Hive.registerAdapter(ReminderAdapter());
   await Hive.openBox<Reminder>('reminders');
+  tz.initializeTimeZones();
   runApp(ReminderApp());
 }
 
@@ -24,6 +28,20 @@ class ReminderApp extends StatefulWidget {
 }
 
 class _ReminderAppState extends State<ReminderApp> {
+
+  @override
+  void initState() {
+    super.initState();
+    NotificationApi.init(initScheduled: true);
+    listenNotifications();
+  }
+
+  void listenNotifications() =>
+      NotificationApi.onNotifications.stream.listen((value) {
+      Navigator.of(context).push(MaterialPageRoute(
+          builder: (context) => ReminderPage()));
+  });
+
   void onTappedBar(int index) {
     setState(() {
       _currentIndex = index;
